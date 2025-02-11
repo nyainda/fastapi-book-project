@@ -1,0 +1,45 @@
+name: CI/CD Pipeline
+
+on:
+  push:  # Triggers for deployment
+    branches:
+      - main
+  pull_request: # Triggers for tests
+    branches:
+      - main
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request' # Only run on PRs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"  # Or your preferred version
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          source venv/bin/activate
+          pytest
+
+  deploy:
+    if: github.event_name == 'push' # Only run on pushes to main
+    needs: test # Only run if tests pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to Railway
+        uses: railwayapp/action@v1
+        with:
+          token: ${{ secrets.RAILWAY_TOKEN }}
+          environment: production # Or your environment name
+
+      - name: API Test (on Railway)
+        run: |
+          ssh ${{ secrets.RAILWAY_SSH_USER }}@${{ secrets.RAILWAY_SSH_HOST }} "curl -s http://localhost/api/v1/1" # Replace 1 with a valid ID. Add error checking

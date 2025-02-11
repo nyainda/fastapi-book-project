@@ -1,11 +1,12 @@
-from tests import client
+from fastapi.testclient import TestClient
+from main import app
 
+client = TestClient(app, base_url="http://test/api/v1")
 
 def test_get_all_books():
     response = client.get("/books/")
     assert response.status_code == 200
     assert len(response.json()) == 3
-
 
 def test_get_single_book():
     response = client.get("/books/1")
@@ -13,7 +14,6 @@ def test_get_single_book():
     data = response.json()
     assert data["title"] == "The Hobbit"
     assert data["author"] == "J.R.R. Tolkien"
-
 
 def test_create_book():
     new_book = {
@@ -29,7 +29,6 @@ def test_create_book():
     assert data["id"] == 4
     assert data["title"] == "Harry Potter and the Sorcerer's Stone"
 
-
 def test_update_book():
     updated_book = {
         "id": 1,
@@ -43,10 +42,9 @@ def test_update_book():
     data = response.json()
     assert data["title"] == "The Hobbit: An Unexpected Journey"
 
-
 def test_delete_book():
     response = client.delete("/books/3")
     assert response.status_code == 204
-
+    
     response = client.get("/books/3")
     assert response.status_code == 404
