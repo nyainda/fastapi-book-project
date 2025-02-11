@@ -27,14 +27,4 @@ jobs:
           source venv/bin/activate
           pytest
 
-  deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Railway CLI
-        run: curl -fsSL https://railway.app/install.sh | sh
-      - name: Deploy to production
-        run: railway up --token ${{ secrets.RAILWAY_TOKEN }}
-        
+  
