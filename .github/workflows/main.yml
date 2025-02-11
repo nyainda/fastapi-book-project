@@ -39,17 +39,17 @@ jobs:
         run: |
           curl -fsSL https://railway.app/install.sh | sh
       
+      - name: Login to Railway
+        run: |
+          railway login --token ${{ secrets.RAILWAY_TOKEN }}
+      
       - name: Link Railway Project
         run: |
           railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
       - name: Deploy to Railway Preview
         run: |
           railway up --service 404c --environment preview
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           
       - name: Wait for preview deployment
         run: sleep 45
@@ -88,19 +88,19 @@ jobs:
         run: |
           curl -fsSL https://railway.app/install.sh | sh
       
+      - name: Login to Railway
+        run: |
+          railway login --token ${{ secrets.RAILWAY_TOKEN }}
+      
       - name: Link Railway Project
         run: |
           railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
       - name: Deploy to Railway Production
         run: |
           railway up --service 404c --environment production
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           
-      - name: Wait for production deployment
+      - name: Wait for preview deployment
         run: sleep 45
         
       - name: Test API endpoints (Production)
