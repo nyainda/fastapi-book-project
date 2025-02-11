@@ -35,13 +35,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+      
       - name: Deploy to Railway Preview
-        uses: railwayapp/railway-actions@v1
+        run: |
+          railway up --service 404c --environment preview
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          environment: preview
           
       - name: Wait for preview deployment
         run: sleep 45
@@ -76,13 +78,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+      
       - name: Deploy to Railway Production
-        uses: railwayapp/railway-actions@v1
+        run: |
+          railway up --service 404c --environment production
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          environment: production
           
       - name: Wait for production deployment
         run: sleep 45
