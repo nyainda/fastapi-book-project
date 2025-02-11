@@ -41,7 +41,7 @@ jobs:
       
       - name: Link Railway Project
         run: |
-          railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+          railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
@@ -90,7 +90,7 @@ jobs:
       
       - name: Link Railway Project
         run: |
-          railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+          railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
