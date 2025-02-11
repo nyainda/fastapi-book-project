@@ -39,6 +39,12 @@ jobs:
         run: |
           curl -fsSL https://railway.app/install.sh | sh
       
+      - name: Link Railway Project
+        run: |
+          railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      
       - name: Deploy to Railway Preview
         run: |
           railway up --service 404c --environment preview
@@ -81,6 +87,12 @@ jobs:
       - name: Install Railway CLI
         run: |
           curl -fsSL https://railway.app/install.sh | sh
+      
+      - name: Link Railway Project
+        run: |
+          railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
       - name: Deploy to Railway Production
         run: |
