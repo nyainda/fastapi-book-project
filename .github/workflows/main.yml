@@ -39,7 +39,7 @@ jobs:
       
       - name: Deploy to production
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ e6a2e407-8d2e-439c-9ab6-675eb3cc1901 }}
         run: |
           curl -fsSL https://railway.app/install.sh | sh
           railway up
