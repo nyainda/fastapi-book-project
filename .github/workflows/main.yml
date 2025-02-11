@@ -27,26 +27,28 @@ jobs:
           source venv/bin/activate
           pytest
 
-  deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  deploy-preview:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs: test
+    environment: preview
     steps:
       - uses: actions/checkout@v3
       
-      - name: Deploy to Railway
+      - name: Deploy to Railway Preview
         uses: railwayapp/railway-actions@v1
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         with:
           railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          environment: preview
           
-      - name: Wait for deployment
-        run: sleep 45  # Increased wait time to ensure deployment is complete
+      - name: Wait for preview deployment
+        run: sleep 45
         
-      - name: Test API endpoints
+      - name: Test API endpoints (Preview)
         run: |
-          echo "Testing FastAPI endpoints on Railway..."
+          echo "Testing FastAPI endpoints on Railway Preview..."
           BASE_URL="${{ secrets.RAILWAY_APP_URL }}"
           
           # Test books list endpoint
@@ -56,7 +58,6 @@ jobs:
             exit 1
           }
           
-          # Test single book endpoints
           for book_id in 1 3; do
             echo "Testing GET /api/v1/books/${book_id} endpoint..."
             curl -f "${BASE_URL}/api/v1/books/${book_id}" || {
@@ -65,4 +66,45 @@ jobs:
             }
           done
           
-          echo "All API endpoint tests completed successfully!"
+          echo "All preview API endpoint tests completed successfully!"
+
+  deploy-production:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: test
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Railway Production
+        uses: railwayapp/railway-actions@v1
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          environment: production
+          
+      - name: Wait for production deployment
+        run: sleep 45
+        
+      - name: Test API endpoints (Production)
+        run: |
+          echo "Testing FastAPI endpoints on Railway Production..."
+          BASE_URL="${{ secrets.RAILWAY_APP_URL }}"
+          
+          # Test books list endpoint
+          echo "Testing GET /api/v1/books/ endpoint..."
+          curl -f "${BASE_URL}/api/v1/books/" || {
+            echo "Error: Failed to fetch books list"
+            exit 1
+          }
+          
+          for book_id in 1 3; do
+            echo "Testing GET /api/v1/books/${book_id} endpoint..."
+            curl -f "${BASE_URL}/api/v1/books/${book_id}" || {
+              echo "Error: Failed to fetch book ${book_id}"
+              exit 1
+            }
+          done
+          
+          echo "All production API endpoint tests completed successfully!"
