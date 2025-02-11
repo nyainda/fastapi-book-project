@@ -2,10 +2,10 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
-    branches: 
+    branches:
       - main
 
 jobs:
@@ -13,114 +13,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
+          
       - name: Install dependencies
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
+          
       - name: Run tests
         run: |
           source venv/bin/activate
           pytest
 
-  deploy-preview:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    needs: test
-    environment: preview
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install Railway CLI
-        run: |
-          curl -fsSL https://railway.app/install.sh | sh
-      
-      - name: Link Railway Project
-        run: |
-          railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      
-      - name: Deploy to Railway Preview
-        run: |
-          railway up --service 404c --environment preview
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          
-      - name: Wait for preview deployment
-        run: sleep 45
-        
-      - name: Test API endpoints (Preview)
-        run: |
-          echo "Testing FastAPI endpoints on Railway Preview..."
-          BASE_URL="${{ secrets.RAILWAY_APP_URL }}"
-          
-          # Test books list endpoint
-          echo "Testing GET /api/v1/books/ endpoint..."
-          curl -f "${BASE_URL}/api/v1/books/" || {
-            echo "Error: Failed to fetch books list"
-            exit 1
-          }
-          
-          for book_id in 1 3; do
-            echo "Testing GET /api/v1/books/${book_id} endpoint..."
-            curl -f "${BASE_URL}/api/v1/books/${book_id}" || {
-              echo "Error: Failed to fetch book ${book_id}"
-              exit 1
-            }
-          done
-          
-          echo "All preview API endpoint tests completed successfully!"
-
-  deploy-production:
+  deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
     needs: test
-    environment: production
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       
-      - name: Install Railway CLI
+      - name: Deploy to production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           curl -fsSL https://railway.app/install.sh | sh
-      
-      - name: Link Railway Project
-        run: |
-          railway link --project ${{ secrets.RAILWAY_PROJECT_ID }}
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      
-      - name: Deploy to Railway Production
-        run: |
-          railway up --service 404c --environment production
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          
-      - name: Wait for production deployment
-        run: sleep 45
-        
-      - name: Test API endpoints (Production)
-        run: |
-          echo "Testing FastAPI endpoints on Railway Production..."
-          BASE_URL="${{ secrets.RAILWAY_APP_URL }}"
-          
-          # Test books list endpoint
-          echo "Testing GET /api/v1/books/ endpoint..."
-          curl -f "${BASE_URL}/api/v1/books/" || {
-            echo "Error: Failed to fetch books list"
-            exit 1
-          }
-          
-          for book_id in 1 3; do
-            echo "Testing GET /api/v1/books/${book_id} endpoint..."
-            curl -f "${BASE_URL}/api/v1/books/${book_id}" || {
-              echo "Error: Failed to fetch book ${book_id}"
-              exit 1
-            }
-          done
-          
-          echo "All production API endpoint tests completed successfully!"
+          railway up
