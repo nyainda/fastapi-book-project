@@ -1,23 +1,22 @@
 name: CI/CD Pipeline
 
 on:
-  push:  # Triggers for deployment
-    branches:
+  push:
+    branches: 
       - main
-  pull_request: # Triggers for tests
-    branches:
+  pull_request:
+    branches: 
       - main
 
 jobs:
   test:
-    if: github.event_name == 'pull_request' # Only run on PRs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"  # Or your preferred version
+          python-version: "3.9"
       - name: Install dependencies
         run: |
           python -m venv venv
@@ -29,17 +28,41 @@ jobs:
           pytest
 
   deploy:
-    if: github.event_name == 'push' # Only run on pushes to main
-    needs: test # Only run if tests pass
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v3
+      
       - name: Deploy to Railway
-        uses: railwayapp/action@v1
+        uses: railwayapp/railway-actions@v1
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         with:
-          token: ${{ secrets.RAILWAY_TOKEN }}
-          environment: production # Or your environment name
-
-      - name: API Test (on Railway)
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          
+      - name: Wait for deployment
+        run: sleep 45  # Increased wait time to ensure deployment is complete
+        
+      - name: Test API endpoints
         run: |
-          ssh ${{ secrets.RAILWAY_SSH_USER }}@${{ secrets.RAILWAY_SSH_HOST }} "curl -s http://localhost/api/v1/1" # Replace 1 with a valid ID. Add error checking
+          echo "Testing FastAPI endpoints on Railway..."
+          BASE_URL="${{ secrets.RAILWAY_APP_URL }}"
+          
+          # Test books list endpoint
+          echo "Testing GET /api/v1/books/ endpoint..."
+          curl -f "${BASE_URL}/api/v1/books/" || {
+            echo "Error: Failed to fetch books list"
+            exit 1
+          }
+          
+          # Test single book endpoints
+          for book_id in 1 3; do
+            echo "Testing GET /api/v1/books/${book_id} endpoint..."
+            curl -f "${BASE_URL}/api/v1/books/${book_id}" || {
+              echo "Error: Failed to fetch book ${book_id}"
+              exit 1
+            }
+          done
+          
+          echo "All API endpoint tests completed successfully!"
