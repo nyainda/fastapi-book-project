@@ -13,18 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
-          
       - name: Install dependencies
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
-          
       - name: Run tests
         run: |
           source venv/bin/activate
@@ -36,10 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+      - name: Install Railway CLI
+        run: curl -fsSL https://railway.app/install.sh | sh
       - name: Deploy to production
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          curl -fsSL https://railway.app/install.sh | sh
-          railway up
+        run: railway up --token ${{ secrets.RAILWAY_TOKEN }}
+        
