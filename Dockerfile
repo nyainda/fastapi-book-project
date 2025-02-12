@@ -1,31 +1,44 @@
-# Dockerfile
+# Use the official Python slim image as the base
 FROM python:3.9-slim
 
+# Set the working directory
 WORKDIR /app
 
-# Install nginx
+# Install system dependencies (including nginx)
 RUN apt-get update && \
-    apt-get install -y nginx && \
+    apt-get install -y --no-install-recommends nginx && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy nginx configuration
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
-COPY nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
+# Create necessary directories for nginx
+RUN mkdir -p /var/log/nginx /var/run && \
+    # Create the 'nginx' user and group if they don't exist
+    addgroup --system nginx && \
+    adduser --system --ingroup nginx nginx && \
+    # Set ownership and permissions for nginx directories
+    chown -R nginx:nginx /var/log/nginx /var/run && \
+    chmod -R 755 /var/log/nginx /var/run
 
-# Copy and install Python requirements
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY api/ /app/api/
+COPY core/ /app/core/
+COPY tests/ /app/tests/
+COPY main.py /app/
 
-# Script to start both nginx and FastAPI
-COPY start.sh .
-RUN chmod +x start.sh
+# Copy Nginx configuration files
+COPY nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
-# Expose port
-EXPOSE 80
+# Copy the start script and make it executable
+COPY start.sh /app/
+RUN chmod +x /app/start.sh
 
-# Start both nginx and FastAPI
-CMD ["./start.sh"]
+# Expose ports
+EXPOSE 80 8000
+
+# Set the entrypoint
+ENTRYPOINT ["/app/start.sh"]
