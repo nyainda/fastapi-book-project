@@ -1,10 +1,14 @@
+#!/bin/bash
 
+# Trap SIGTERM and SIGINT
 trap 'kill -TERM $nginx_pid $uvicorn_pid; wait $nginx_pid $uvicorn_pid' TERM INT
 
 # Start nginx in the background
 nginx -g "daemon off;" &
 nginx_pid=$!
 
+# Start uvicorn with the correct path
+# Using main:app since main.py is in the /app directory
 uvicorn main:app --host 0.0.0.0 --port 8000 &
 uvicorn_pid=$!
 
