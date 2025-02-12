@@ -10,24 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Build Docker Image
-        run: docker build -t my-fastapi-app .
-
-      - name: Push Docker Image to Railway Registry
-        run: |
-          docker login -u ${{ secrets.RAILWAY_DOCKER_USERNAME }} -p ${{ secrets.RAILWAY_DOCKER_PASSWORD }} registry.railway.app
-          docker tag my-fastapi-app registry.railway.app/${{ secrets.RAILWAY_PROJECT_ID }}/my-fastapi-app:latest
-          docker push registry.railway.app/${{ secrets.RAILWAY_PROJECT_ID }}/my-fastapi-app:latest
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
 
       - name: Deploy to Railway
-        run: curl -X POST -H "Authorization: Bearer ${{ secrets.RAILWAY_API_TOKEN }}" https://api.railway.app/projects/${{ secrets.RAILWAY_PROJECT_ID }}/deployments
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up
