@@ -1,14 +1,17 @@
-# Use an official Python runtime as the base image
 FROM python:3.9-slim
 
-# Set the working directory
 WORKDIR /app
 
-# Install Nginx and clean up apt cache
+# Install nginx and setup necessary directories
 RUN apt-get update && \
     apt-get install -y nginx && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    addgroup --system nginx && \
+    adduser --system --ingroup nginx nginx && \
+    mkdir -p /var/log/nginx /var/run && \
+    chown -R nginx:nginx /var/log/nginx /var/run && \
+    chmod -R 755 /var/log/nginx /var/run
 
 # Copy requirements and install dependencies
 COPY requirements.txt .
@@ -20,11 +23,13 @@ COPY core/ /app/core/
 COPY tests/ /app/tests/
 COPY main.py /app/
 
-# Copy Nginx configuration
+# Copy nginx configuration
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
-# Expose port 80 for Nginx
+# Copy and setup start script
+COPY start.sh /app/
+RUN chmod +x /app/start.sh
+
 EXPOSE 80
 
-# Start Nginx and FastAPI
-CMD nginx && uvicorn main:app --host 0.0.0.0 --port 8000
+CMD ["/app/start.sh"]
