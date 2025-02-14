@@ -1,7 +1,7 @@
 FROM nginx:alpine
 
 # Copy the Nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
 # Make sure PORT is available during runtime
 ENV PORT=80
