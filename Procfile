@@ -1,1 +1,0 @@
-web: nginx -c /app/nginx.conf && uvicorn main:app --host 0.0.0.0 --port 8000
